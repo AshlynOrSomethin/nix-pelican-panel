@@ -19,6 +19,13 @@
         wings = wingsPackage;
       };
 
+      checks.${system}.wings-module = import ./tests/wings-module.nix {
+        inherit nixpkgs system;
+        wingsModule = args: import ./modules/wings.nix (
+          args // { inherit pkgs wingsPackage; }
+        );
+      };
+
       nixosModules.pelican-panel =
         args:
         import ./modules/pelican-panel.nix (

@@ -7,6 +7,8 @@
 }:
 let
   cfg = config.services.wings;
+  runtimeService = if cfg.containerBackend == "podman" then "podman.socket" else "docker.service";
+  runtimeGroup = cfg.containerBackend;
   toSnakeCase = import ../utils/to-snake-case.nix { inherit lib; };
   convertAttributes = import ../utils/convert-attributes.nix {
     inherit lib;
@@ -43,6 +45,15 @@ in
 {
   options.services.wings = {
     enable = lib.mkEnableOption "Enable wings.";
+
+    containerBackend = lib.mkOption {
+      type = lib.types.enum [ "docker" "podman" ];
+      default = "docker";
+      description = ''
+        Container runtime used by Wings. Podman uses the rootful system API
+        socket and can coexist with Docker without replacing its socket.
+      '';
+    };
 
     openFirewall = lib.mkOption {
       description = "Whether to open the Wings port in the firewall.";
@@ -177,7 +188,8 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ wingsPackage ];
 
-    virtualisation.docker.enable = true;
+    virtualisation.docker.enable = lib.mkIf (cfg.containerBackend == "docker") true;
+    virtualisation.podman.enable = lib.mkIf (cfg.containerBackend == "podman") true;
 
     systemd.tmpfiles.rules = [
       "d /etc/pelican 0755 pelican pelican -"
@@ -202,14 +214,18 @@ in
       description = "Wings Daemon";
       after = [
         "network.target"
-        "docker.service"
+        runtimeService
         "wings-config-setup.service"
       ];
       requires = [
-        "docker.service"
+        runtimeService
         "wings-config-setup.service"
       ];
       wantedBy = [ "multi-user.target" ];
+
+      environment = lib.mkIf (cfg.containerBackend == "podman") {
+        DOCKER_HOST = "unix:///run/podman/podman.sock";
+      };
 
       preStart = ''
         mkdir -p /var/log/pelican
@@ -222,7 +238,7 @@ in
         Group = "pelican";
         Restart = "always";
         RestartSec = "5s";
-        SupplementaryGroups = [ "docker" ];
+        SupplementaryGroups = [ runtimeGroup ];
         WorkingDirectory = "/var/lib/pelican";
         StateDirectory = "pelican";
         LogsDirectory = "pelican";
@@ -236,7 +252,7 @@ in
     users.users.pelican = {
       isSystemUser = true;
       group = "pelican";
-      extraGroups = [ "docker" ];
+      extraGroups = [ runtimeGroup ];
     };
 
     users.groups.pelican = { };

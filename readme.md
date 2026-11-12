@@ -92,3 +92,19 @@ On the panel, create a wing, note the config and translate it to nix config:
 ```
 
 Note: This package provides the rest of the config as defaults, so no need to edit if you want to keep those.
+
+**Use Podman for Wings**
+
+Wings uses Docker by default. To use the rootful Podman system socket instead,
+set `services.wings.containerBackend = "podman";`. This enables Podman and
+does not replace Docker's socket, so other Docker services can continue running.
+Access to the rootful Podman socket grants root-equivalent control of the host.
+
+Docker and Podman keep separate containers, images, and networks. Switching the
+backend does not migrate running servers or their data: stop Wings-managed
+containers, back up server data, and plan for downtime and rollback before
+switching. Verify port bindings, networking, server startup, and backups after
+the change. Wings' configured data directory remains the same. In particular,
+Wings uses the `pelican0` bridge and a default `172.18.0.0/16` subnet; an
+existing Docker Wings network may conflict with the new Podman network. Plan
+and test the network transition before starting Wings against Podman.

@@ -36,7 +36,7 @@ jobs:
           fi
 
       - name: Verify build
-        run: nix build .#pelican-panel .#wings
+        run: nix build .#pelican-panel .#wings .#checks.x86_64-linux.wings-module
 
       - name: Get versions
         if: steps.changes.outputs.changed == 'true'
