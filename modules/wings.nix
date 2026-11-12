@@ -18,7 +18,12 @@ let
   configPathInEtc = "/pelican/config.yml";
   configPath = "/etc" + configPathInEtc;
 
-  configWithoutToken = convertAttributes (removeAttrs cfg.node [ "tokenPath" ]);
+  configWithoutToken = convertAttributes (
+    removeAttrs cfg.node [ "tokenPath" ]
+    // lib.optionalAttrs (cfg.containerLogConfig != null) {
+      docker.logConfig = cfg.containerLogConfig;
+    }
+  );
 
   baseConfigFile = (pkgs.formats.yaml { }).generate "wings-config-base.yml" configWithoutToken;
 
@@ -52,6 +57,26 @@ in
       description = ''
         Container runtime used by Wings. Podman uses the rootful system API
         socket and can coexist with Docker without replacing its socket.
+      '';
+    };
+
+    containerLogConfig = lib.mkOption {
+      type = lib.types.nullOr (lib.types.submodule {
+        options = {
+          type = lib.mkOption { type = lib.types.str; };
+          config = lib.mkOption {
+            type = lib.types.attrsOf lib.types.str;
+            default = { };
+          };
+        };
+      });
+      default = if cfg.containerBackend == "podman" then {
+        type = "k8s-file";
+        config = { };
+      } else null;
+      description = ''
+        Container logging driver and options. When null, Wings uses its own
+        defaults. Podman defaults to k8s-file instead of Docker's local driver.
       '';
     };
 

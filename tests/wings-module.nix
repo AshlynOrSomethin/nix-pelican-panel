@@ -31,6 +31,7 @@ let
   disabled = makeConfig { enable = false; containerBackend = "podman"; } { };
 in
 assert docker.services.wings.containerBackend == "docker";
+assert docker.services.wings.containerLogConfig == null;
 assert docker.virtualisation.docker.enable;
 assert !docker.virtualisation.podman.enable;
 assert builtins.elem "docker.service" docker.systemd.services.wings.requires;
@@ -39,6 +40,8 @@ assert docker.systemd.services.wings.serviceConfig.SupplementaryGroups == [ "doc
 assert docker.users.users.pelican.extraGroups == [ "docker" ];
 assert !(docker.systemd.services.wings.environment ? DOCKER_HOST);
 assert podman.virtualisation.podman.enable;
+assert podman.services.wings.containerLogConfig.type == "k8s-file";
+assert podman.services.wings.containerLogConfig.config == { };
 assert !podman.virtualisation.docker.enable;
 assert !podman.virtualisation.podman.dockerSocket.enable;
 assert podman.systemd.sockets.podman.socketConfig.SocketGroup == "podman";

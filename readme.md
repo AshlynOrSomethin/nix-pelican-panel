@@ -99,6 +99,8 @@ Wings uses Docker by default. To use the rootful Podman system socket instead,
 set `services.wings.containerBackend = "podman";`. This enables Podman and
 does not replace Docker's socket, so other Docker services can continue running.
 Access to the rootful Podman socket grants root-equivalent control of the host.
+Wings uses the Podman-compatible `k8s-file` logging driver by default in this
+mode; override it with `services.wings.containerLogConfig` if needed.
 
 Docker and Podman keep separate containers, images, and networks. Switching the
 backend does not migrate running servers or their data: stop Wings-managed
