@@ -1,10 +1,29 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 get_latest_version() {
     local repo=$1
-    curl -s "https://api.github.com/repos/pelican/$repo/releases/latest" | jq -r '.tag_name' | sed 's/^v//'
+    local page=1 releases count
+    {
+        while :; do
+            releases=$(curl -fsSL -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/pelican/$repo/releases?per_page=100&page=$page")
+            count=$(jq -er 'if type == "array" then length else error("Expected a release array") end' <<< "$releases")
+            printf '%s\n' "$releases"
+            (( count < 100 )) && break
+            ((page += 1))
+        done
+    } | jq -ser '
+        [ .[][] | select(.draft == false and .published_at != null) ]
+        | if length == 0 then error("No published releases found")
+          else max_by(.published_at).tag_name
+          end
+        | if type == "string" and test("^v?[0-9][0-9A-Za-z.+_-]*$")
+          then sub("^v"; "")
+          else error("Invalid release tag")
+          end
+    '
 }
 
 update_version() {
@@ -18,7 +37,7 @@ capture_hash() {
     local output
     output=$(nix build --no-link ".#$flake" 2>&1) || true
     local hash
-    hash=$(echo "$output" | grep -oP 'got:\s+\K\S+' | head -1)
+    hash=$(echo "$output" | grep -oP 'got:\s+\K\S+' | head -1 || true)
     if [ -z "$hash" ]; then
         echo "Error: failed to capture hash for .#$flake — build output:" >&2
         echo "$output" >&2
@@ -60,6 +79,7 @@ update_hash() {
     update_dependency_hash "$file" "hash" "$flake"
 }
 
+main() {
 echo "🔄 Updating Pelican Panel packages..."
 
 echo "📡 Fetching latest versions..."
@@ -80,3 +100,8 @@ echo "🔧 Updating Wings vendor hash..."
 update_vendor_hash "lib/wings.nix" "wings"
 
 echo "✅ Done! Updated to Panel $panel_version, Wings $wings_version"
+}
+
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    main "$@"
+fi

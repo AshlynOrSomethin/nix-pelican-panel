@@ -5,7 +5,7 @@
 }:
 
 let
-  version = "1.0.0-rc.1";
+  version = "1.0.0-rc.2";
 in
 
 buildGoModule {
@@ -16,10 +16,10 @@ buildGoModule {
     owner = "pelican";
     repo = "wings";
     rev = "v${version}";
-    sha256 = "sha256-TErlxIXSlmxPaEQLLqcHUm+Sum+pjI8hYve0CWpc6hc=";
+    sha256 = "sha256-BYrBL1zXygPLZKGfsLrrRDzIrTWvSn5F1Z3sVoTgGTA=";
   };
 
-  vendorHash = "sha256-2Hs1SfCsf5JYIIRC0VHlfVzRx2e+xrSotqrfbCqMogo=";
+  vendorHash = "sha256-mOba5VECZIj+u9Dw1nOdaxom/zV4PltEE4QpqbHDdTw=";
 
   meta = {
     description = "Wings";

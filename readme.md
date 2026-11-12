@@ -5,6 +5,9 @@ Run Pelican Panel on NixOS
 > [!WARNING]
 > This readme assumes you did not modify default settings. Some commands may need to change if you do.
 
+The automated updater follows the most recently published Panel and Wings releases,
+including GitHub prereleases. Draft releases are excluded.
+
 ## Usage
 
 **Update your flake**
