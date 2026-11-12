@@ -1,0 +1,38 @@
+diff --git a/server/filesystem/regression_test.go b/server/filesystem/regression_test.go
+--- a/server/filesystem/regression_test.go
++++ b/server/filesystem/regression_test.go
+@@ -225,6 +225,7 @@ func TestFilesystem_ChmodAppliesSpecialBitsFromUnixMode(t *testing.T) {
+ 	defer fs.reset()
+ 
+ 	fs.write("run.sh", []byte("#!/bin/sh"))
++	requireSpecialMode(t, filepath.Join(fs.rootPath, "run.sh"), os.ModeSetuid|0o755)
+ 	if err := os.Mkdir(filepath.Join(fs.rootPath, "shared"), 0o755); err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/server/filesystem/review_test.go b/server/filesystem/review_test.go
+--- a/server/filesystem/review_test.go
++++ b/server/filesystem/review_test.go
+@@ -282,5 +282,15 @@ func TestFilesystem_DecompressFile(t *testing.T) {
+ }
+ 
++func requireSpecialMode(t *testing.T, path string, mode os.FileMode) {
++	t.Helper()
++	if err := os.Chmod(path, mode); err != nil {
++		if errors.Is(err, syscall.EPERM) {
++			t.Skipf("environment does not permit special permission bits: %v", err)
++		}
++		t.Fatal(err)
++	}
++}
++
+ // Chmod passes setgid and sticky through, which backup restore relies on.
+ func TestFilesystem_ChmodKeepsSetgidAndSticky(t *testing.T) {
+ 	fs := NewFs()
+@@ -291,6 +301,7 @@ func TestFilesystem_ChmodKeepsSetgidAndSticky(t *testing.T) {
+ 	if err := os.Mkdir(filepath.Join(fs.rootPath, "shared"), 0o755); err != nil {
+ 		t.Fatal(err)
+ 	}
++	requireSpecialMode(t, filepath.Join(fs.rootPath, "shared"), 0o775|os.ModeSetgid|os.ModeSticky)
+ 	if err := fs.Chmod("shared", 0o775|os.ModeSetgid|os.ModeSticky); err != nil {
+ 		t.Fatal(err)
+ 	}

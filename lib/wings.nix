@@ -21,6 +21,8 @@ buildGoModule {
 
   vendorHash = "sha256-mOba5VECZIj+u9Dw1nOdaxom/zV4PltEE4QpqbHDdTw=";
 
+  patches = [ ./wings-sandbox-tests.patch ];
+
   meta = {
     description = "Wings";
     homepage = "https://pelican.dev/";
