@@ -56,7 +56,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          branch="auto-update/$(date +%Y-%m-%d)"
+          branch="auto-update/$(date +%Y-%m-%d)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git checkout -b "$branch"
           git add lib/
           git commit -m "chore: update panel to ${{ steps.versions.outputs.panel }}, wings to ${{ steps.versions.outputs.wings }}"
