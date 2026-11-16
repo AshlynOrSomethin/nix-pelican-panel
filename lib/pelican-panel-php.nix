@@ -23,7 +23,7 @@ let
   );
   pname = "pelican-panel-php";
   composerLock = "$src/composer.lock";
-  vendorHash = "sha256-NRZs3yJvHTrmLG0mAQMuoh/KxcmDznAjJs/BLskZXRw=";
+  vendorHash = "sha256-c9rkQ+bJYcT2AgSaie8o+VBwtGepJXVvXnnnX8H9XH8=";
 in
 
 pkgs.php.buildComposerProject {
